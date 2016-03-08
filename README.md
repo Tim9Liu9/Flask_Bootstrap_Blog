@@ -1,2 +1,3 @@
-# Flask_bootstrap_blog
-用Flask于bootstrap做的blog
+# Flask_Bootstrap_Blog
+
+用Flask与Bootstrap做的blog
