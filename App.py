@@ -83,6 +83,10 @@ def upload():
 def page_not_found(error):
     return render_template("404.html")
 
+@app.template_test('current_link')
+def is_current_link(link):
+    return link == request.path
+
 # 能及时debug信息，自动更新到浏览器上显示
 @manager.command
 def dev():
