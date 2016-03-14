@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    {% block head %}
+        {% include ['includes/_head.html'] %}
+    {% endblock %}
+</head>
+<body>
+    <header> {% block header %}{% endblock %}</header>
+
+    <div>{% block content %}{% endblock %}</div>
+
+    <footer>
+        {% block footer %}
+            Copyright 2016 by <a href="http://www.timliu.com">TimLiu</a>
+        {% endblock %}
+    </footer>
+</body>
+</html>

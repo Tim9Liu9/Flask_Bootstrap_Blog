@@ -17,6 +17,7 @@ manager = Manager(app)
 
 @app.route("/")
 def index():
+    print "-->"
     return render_template("index.html",
                            title="<h1>Hello world</h1>",
                            body="# Header2")

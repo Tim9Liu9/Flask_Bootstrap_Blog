@@ -1,40 +1,35 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>{{title}}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='site.css') }}" />
-</head>
-<body>
-    <h1>{{title}}</h1>
-<nav>
-    <a href="{{ url_for('.services') }}">Services</a>
-    <a href="{{ url_for('.about') }}">about</a>
-</nav>
-{% autoescape false %}
-{{title}}
-{% endautoescape %}
-{{title | safe}}
-{{body|md|safe}}
-{{read_md('readmeTest.md')|md|safe}}
+{% extends 'base.html' %}
+{% import '_marcos.html' as ui %}
 
-{% set links=[
-    ('Home', url_for('.index')),
-    ('About', url_for('.about')),
-    ('Services', url_for('.services')),
-    ('Projects', url_for('.projects')),
-] %}
+{% block title %}{{title}}{% endblock %}
 
-<nav>
-    {% for label,href in links %}
-        {% if not loop.first %} | {% endif %}
-        {% if href is current_link %}
-            <a href="#">{{label}}</a>
-        {% else %}
-            <a href="{{href}}">{{label}}</a>
-        {% endif %}
-    {% endfor %}
-</nav>
+{% block content %}
+    {% set links=[
+        ('Home', url_for('.index')),
+        ('About', url_for('.about')),
+        ('Services', url_for('.services')),
+        ('Projects', url_for('.projects')),
+    ] %}
 
-</body>
-</html>
+    <nav>
+        {% for label,href in links %}
+            {% if not loop.first %} | {% endif %}
+            {% if href is current_link %}
+                <a href="#">{{label}}</a>
+            {% else %}
+                <a href="{{href}}">{{label}}</a>
+            {% endif %}
+        {% endfor %}
+    </nav>
+    <h1>{{self.title()}}</h1>
+
+    {{ ui.input('username') }}
+    {{ ui.input('password',type='password') }}
+
+
+{% endblock content %}
+
+{% block footer %}
+    <hr>
+    {{super()}}
+{% endblock %}
