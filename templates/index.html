@@ -11,6 +11,11 @@
     <a href="{{ url_for('.services') }}">Services</a>
     <a href="{{ url_for('.about') }}">about</a>
 </nav>
-<h2>你好</h2>
+{% autoescape false %}
+{{title}}
+{% endautoescape %}
+{{title | safe}}
+{{body|md|safe}}
+{{read_md('readmeTest.md')|md|safe}}
 </body>
 </html>

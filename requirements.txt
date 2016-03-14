@@ -6,6 +6,7 @@ Flask-Script==2.0.5
 itsdangerous==0.24
 Jinja2==2.8
 livereload==2.4.1
+Markdown==2.6.5
 MarkupSafe==0.23
 singledispatch==3.4.0.3
 six==1.10.0
