@@ -1,8 +1,9 @@
 #coding:utf-8
-from flask import Flask,render_template,request,redirect,url_for
+from flask import Flask,render_template,request,redirect,url_for,make_response,abort
 from werkzeug.routing import BaseConverter
 from werkzeug.utils import secure_filename
 from os import path
+from flask.ext.script import Manager
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -12,10 +13,16 @@ class RegexConverter(BaseConverter):
 app = Flask(__name__)
 app.url_map.converters['regex'] = RegexConverter
 
+manager = Manager(app)
+
 @app.route("/")
 def hello():
     # return "<h3>Hello world!</h3>"
-    return render_template('index.html',title='wecome')
+    # abort(404)
+    response = make_response(render_template('index.html',title='wecome'))
+    # return render_template('index.html',title='wecome')
+    response.set_cookie('username', '')
+    return response
 
 @app.route("/services")
 def services():
@@ -45,11 +52,11 @@ def projects():
 
 @app.route('/login',methods=['GET','POST'])
 def login():
-    if request.module == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-    else:
-        username = request.args['username']
+    # if request.method == 'POST':
+    #     username = request.form['username']
+    #     password = request.form['password']
+    # else:
+    #     username = request.args['username']
     return render_template('login.html', method=request.method)
 
 # 演示文件上传到服务器
@@ -70,5 +77,16 @@ def upload():
 def page_not_found(error):
     return render_template("404.html")
 
+# 能及时debug信息，自动更新到浏览器上显示
+@manager.command
+def dev():
+    from livereload import Server
+    live_server = Server(app.wsgi_app)
+    live_server.watch('**/*.*')
+    live_server.serve(open_url=True)
+
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    # app.run(debug=True)
+    manager.run()
