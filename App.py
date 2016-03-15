@@ -4,6 +4,9 @@ from werkzeug.routing import BaseConverter
 from werkzeug.utils import secure_filename
 from os import path
 from flask.ext.script import Manager
+from flask_bootstrap import Bootstrap
+from flask_nav import Nav
+from flask_nav.elements import *
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -13,11 +16,19 @@ class RegexConverter(BaseConverter):
 app = Flask(__name__)
 app.url_map.converters['regex'] = RegexConverter
 
+Bootstrap(app)
+nav = Nav()
 manager = Manager(app)
+nav.register_element('top',Navbar(u'Flask入门',
+                                  View(u'主页', 'index'),
+                                  View(u'关于', 'about'),
+                                  View(u'服务', 'services'),
+                                  View(u'项目', 'projects')
+                                ))
+nav.init_app(app)
 
 @app.route("/")
 def index():
-    print "-->"
     return render_template("index.html",
                            title="<h1>Hello world</h1>",
                            body="# Header2")
