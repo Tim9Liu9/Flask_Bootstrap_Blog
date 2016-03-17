@@ -1,5 +1,5 @@
 #coding:utf-8
-from flask import Flask,render_template,request,redirect,url_for,make_response,abort
+from flask import Flask,render_template,request,redirect,url_for,make_response,abort,flash
 from werkzeug.routing import BaseConverter
 from werkzeug.utils import secure_filename
 from os import path
@@ -18,6 +18,8 @@ app.url_map.converters['regex'] = RegexConverter
 
 Bootstrap(app)
 nav = Nav()
+
+app.config.from_pyfile('config')
 manager = Manager(app)
 nav.register_element('top',Navbar(u'Flask入门',
                                   View(u'主页', 'index'),
@@ -68,14 +70,14 @@ def user3(user_id):
 def projects():
     return 'The project page'
 
-@app.route('/login',methods=['GET','POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    # if request.method == 'POST':
-    #     username = request.form['username']
-    #     password = request.form['password']
-    # else:
-    #     username = request.args['username']
-    return render_template('login.html', method=request.method)
+    from forms import LoginForm
+    form = LoginForm()
+    flash(u"登录成功！")
+    return render_template('login.html', title=u'登录', form=form)
+
+
 
 # 演示文件上传到服务器
 @app.route('/upload',methods=['GET','POST'])
@@ -107,6 +109,7 @@ def dev():
     # 监控所有的文件
     live_server.watch('**/*.*')
     live_server.serve(open_url=True)
+
 
 @app.template_filter('md')
 def markdown_to_html(txt):

@@ -6,6 +6,7 @@ Flask==0.10.1
 Flask-Bootstrap==3.3.5.7
 flask-nav==0.5
 Flask-Script==2.0.5
+Flask-WTF==0.12
 itsdangerous==0.24
 Jinja2==2.8
 livereload==2.4.1
@@ -16,3 +17,4 @@ six==1.10.0
 tornado==4.3
 visitor==0.1.2
 Werkzeug==0.11.4
+WTForms==2.1
