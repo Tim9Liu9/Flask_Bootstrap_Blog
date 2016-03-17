@@ -48,6 +48,7 @@ def create_app():
     nav.init_app(app)
     init_views(app)
 
+
     return app
 
 
