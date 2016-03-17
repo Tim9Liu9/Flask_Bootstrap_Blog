@@ -7,11 +7,15 @@ from flask.ext.script import Manager
 from flask_bootstrap import Bootstrap
 from flask_nav import Nav
 from flask_nav.elements import *
+from flask_sqlalchemy import SQLAlchemy
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
         super(RegexConverter, self).__init__(url_map)
         self.regex = items[0]
+
+basedir = path.abspath(path.dirname(__file__))
+print "000====>2,basedir=%s" % basedir
 
 app = Flask(__name__)
 app.url_map.converters['regex'] = RegexConverter
@@ -20,6 +24,11 @@ Bootstrap(app)
 nav = Nav()
 
 app.config.from_pyfile('config')
+app.config['SQLALCHEMY_DATABASE_URI'] = \
+    'sqlite:///' + path.join(basedir, 'data.sqlite')
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+db = SQLAlchemy(app)
+
 manager = Manager(app)
 nav.register_element('top',Navbar(u'Flask入门',
                                   View(u'主页', 'index'),
@@ -108,7 +117,19 @@ def dev():
     live_server = Server(app.wsgi_app)
     # 监控所有的文件
     live_server.watch('**/*.*')
-    live_server.serve(open_url=True)
+    live_server.serve(open_url=False)
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=True)
+
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=True)
+    password = db.Column(db.String, nullable=True)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
 
 @app.template_filter('md')
@@ -128,4 +149,6 @@ def inject_methods():
 
 if __name__ == "__main__":
     # app.run(debug=True)
-    manager.run()
+    # manager.run()
+    print "000====>1"
+    dev()
