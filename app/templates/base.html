@@ -1,7 +1,7 @@
 {% extends 'bootstrap/base.html' %}
 {% import '_marcos.html' as ui %}
 
-<!--{% block title %}{{ title }} {% endblock %}-->
+{% block title %}{{ title }} {% endblock %}
 {% block head %}
     {{ super() }}
     {% include ['includes/_head.html'] %}
@@ -13,19 +13,15 @@
           href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/cerulean/bootstrap.min.css" />
 {% endblock %}
 
-{% block navbar %}
-    {{ nav.top.render() }}
-{% endblock %}
+
 
 {% block content %}
     <header> {% block header %}{% endblock %}</header>
 
 {% endblock %}
 
-
 {% block footer %}
     <footer>
         Copyright 2016 by <a href="http://www.timliu.com">TimLiu</a>
     </footer>
 {% endblock %}
-

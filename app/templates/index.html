@@ -4,23 +4,7 @@
 {% block title %}{{title}}{% endblock %}
 
 {% block content %}
-    {% set links=[
-        ('Home', url_for('.index')),
-        ('About', url_for('.about')),
-        ('Services', url_for('.services')),
-        ('Projects', url_for('.projects')),
-    ] %}
 
-    <nav>
-        {% for label,href in links %}
-            {% if not loop.first %} | {% endif %}
-            {% if href is current_link %}
-                <a href="#">{{label}}</a>
-            {% else %}
-                <a href="{{href}}">{{label}}</a>
-            {% endif %}
-        {% endfor %}
-    </nav>
     <h1>{{self.title()}}</h1>
 
     {{ ui.input('username') }}

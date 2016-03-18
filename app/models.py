@@ -11,6 +11,7 @@ class Role(db.Model):
     name = db.Column(db.String, nullable=True)
     users = db.relationship('User', backref='role')
 
+    # 刚刚数据迁移好的时候，进行数据初始化
     @staticmethod
     def seed():
         db.session.add_all(map(lambda r: Role(name=r), ['Guests','Administrators']))
@@ -30,7 +31,9 @@ class User(db.Model):
 
 db.event.listen(User.name, 'set', User.on_created)
 
-
+# @login_manager.user_loader
+# def get_user(user_id):
+#     return User.query.filter_by(name=user_id).first()
 
 '''
 
