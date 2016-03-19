@@ -3,7 +3,7 @@
 {% block page_body %}
     <div class="container">
         {% for message in get_flashed_messages() %}
-           <div class="alert-info"> {{ message }}</div>
+            <div class="alert-info"> {{ message }}</div>
         {% endfor %}
         {{ wtf.quick_form(form) }}
     </div>

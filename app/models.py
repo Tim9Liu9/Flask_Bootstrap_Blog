@@ -1,97 +1,85 @@
-#coding:utf-8
-
-
-
-from . import db
+from . import db, login_manager
+from flask_login import UserMixin, AnonymousUserMixin
+from datetime import datetime
+from markdown import markdown
 
 
 class Role(db.Model):
     __tablename__ = 'roles'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=True)
+    name = db.Column(db.String)
     users = db.relationship('User', backref='role')
 
-    # 刚刚数据迁移好的时候，进行数据初始化
     @staticmethod
     def seed():
-        db.session.add_all(map(lambda r: Role(name=r), ['Guests','Administrators']))
+        db.session.add_all(map(lambda r: Role(name=r), ['Guests', 'Administrators']))
         db.session.commit()
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=True)
-    password = db.Column(db.String, nullable=True)
+    name = db.Column(db.String)
+    email = db.Column(db.String)
+    password = db.Column(db.String)
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
 
+    posts = db.relationship('Post', backref='author')
+    comments = db.relationship('Comment', backref='author')
+
+    locale = db.Column(db.String, default='zh')
+
     @staticmethod
-    def on_created(target, value, initiator):
-        target.role = Role.query.filter_by(name='Guests') .first()
+    def on_created(target, value, oldvalue, initiator):
+        target.role = Role.query.filter_by(name='Guests').first()
+
+
+class AnonymousUser(AnonymousUserMixin):
+    @property
+    def locale(self):
+        return 'zh'
+
+    def is_administrator(self):
+        return False
+
+
+login_manager.anonymous_user = AnonymousUser
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
 
 db.event.listen(User.name, 'set', User.on_created)
 
-# @login_manager.user_loader
-# def get_user(user_id):
-#     return User.query.filter_by(name=user_id).first()
 
-'''
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String)
+    body = db.Column(db.String)
+    body_html = db.Column(db.String)
+    created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
 
-#python manager.py shell
+    comments = db.relationship('Comment', backref='post')
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
->>> from app import db
->>> from app import models
->>> db.create_all()
-
->>> from app.models import Role,User
->>> admins=Role(name='administrators')
->>> mod=Role(name='moderator')
->>> db.session.add_all([admins,mod])
->>> db.session.commit()
-
->>> tim = User(name='Tim', role=admins)
->>> db.session.add(tim)
->>> db.session.commit()
+    @staticmethod
+    def on_body_changed(target, value, oldvalue, initiator):
+        if value is None or (value is ''):
+            target.body_html = ''
+        else:
+            target.body_html = markdown(value)
 
 
- tim.password = '123456'
->>> db.session.add(tim)
->>> db.session.commit()
+db.event.listen(Post.body, 'set', Post.on_body_changed)
 
->>> db.session.delete(tim)
->>> db.session.commit()
 
->>> db.session.add(User(name='Tim', role=admins))
->>> db.session.commit()
-
->>> User.query.all()
->>> User.query.get(1)
-
->>> Role.query.get(1)
->>> Role.query.get(2)
->>> Role.query.get(3)
->>> Role.query.get(2).name
-
-'''
-
-'''
-15-数据库事件与数据迁移
- 安装数据迁移插件：#pip install flask-migrate
-数据库初始化环境，生成相应的文件migrations夹里面的内容： #python manager.py db init
-初始化的迁移，生成migrations/versions/里面的文件： #python manager.py db migrate -m 'Initial migration'
-迁移生成数据库文件(删除以前的相关表)：#python manager.py db upgrade
-迁移生成数据库文件(重新建立以前的相关表)：#python manager.py db downgrade
-
-应该有问题：
-执行下面命令只会删除以前的数据表
-#python manager.py db upgrade
-应该还要执行下面的命令，来生成相关的数据表：
-#python manager.py db downgrade
-那么​manage.py里面的deploy()方法也是有问题的，正确的是如下：
-@manager.command
-def deploy():
-    from app.models import Role
-    upgrade()
-    downgrade()
-    Role.seed()
-'''
+class Comment(db.Model):
+    __tablename__ = 'comments'
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.String)
+    created = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))

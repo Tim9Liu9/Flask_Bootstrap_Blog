@@ -1,88 +1,111 @@
-#coding:utf-8
+# -*- coding: utf-8 -*-
 
-from flask import render_template, request, flash, redirect, url_for, make_response
-from os import path
-from werkzeug.utils import secure_filename
-
+from flask import render_template, request, flash, redirect, url_for,current_app,abort
 from . import main
+from .. import db
+from ..models import Post, Comment
+from flask.ext.login import login_required, current_user
+from .forms import CommentForm, PostForm
+# from flask_babel import gettext as _
 
-@main.route("/")
+
+@main.errorhandler(404)
+def page_not_found(error):
+    return render_template('404.html'), 404
+
+
+@main.route('/')
 def index():
-    print "index-->"
-    return render_template("index.html",title=u"欢迎")
+    # posts=Post.query.all()
+
+    page_index = request.args.get('page', 1, type=int)
+
+    query = Post.query.order_by(Post.created.desc())
+
+    pagination = query.paginate(page_index, per_page=20, error_out=False)
+
+    posts = pagination.items
+
+    return render_template('index.html',
+                           title=u'欢迎来到Tim的博客',
+                           posts=posts,
+                           pagination=pagination)
+
 
 @main.route('/about')
 def about():
-    return render_template("about.html",title=u"关于")
+    return render_template('about.html', title=u'关于')
 
 
+@main.route('/posts/<int:id>', methods=['GET', 'POST'])
+def post(id):
+    # Detail 详情页
+    post = Post.query.get_or_404(id)
 
-@main.route("/services")
-def services():
-    return 'services'
+    # 评论窗体
+    form = CommentForm()
 
+    # 保存评论
+    if form.validate_on_submit():
+        comment = Comment(author=current_user,
+                          body=form.body.data,
+                          post=post)
+        db.session.add(comment)
+        db.session.commit()
 
-
-
-
-
-
-
-'''
- # 自定义404页面
-@main.errorhandler(404)
-def page_not_found(error):
-    return render_template("404.html")
-
-@main.route('/user/<username>')
-def user(username):
-    return "User %s" % username
-
-@main.route('/user2/<int:user_id>')
-def user2(user_id):
-    return "User_id: %d" % user_id
-
-# 注意<>里面的空格，可能导致编译错误
-@main.route('/user3/<regex("[a-z]{3}"):user_id>')
-def user3(user_id):
-    return "User_id: %s" % user_id
-
-@main.route('/projects/')
-@main.route('/our-works/')
-def projects():
-    return 'The project page'
+    return render_template('posts/detail.html',
+                           title=post.title,
+                           form=form,
+                           post=post)
 
 
-# 演示文件上传到服务器
-@main.route('/upload',methods=['GET','POST'])
-def upload():
-    if request.method == 'POST':
-        f = request.files['file']
-        basepath = path.abspath(path.dirname(__file__))
-        upload_path = path.join(basepath, 'static/uploads/')
-        print f
-        print upload_path
-        f.save(upload_path + secure_filename(f.filename))
-        return redirect(url_for('upload'))
-    return render_template('upload.html')
+@main.route('/edit', methods=['GET', 'POST'])
+@main.route('/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit(id=0):
+    form = PostForm()
+    post = None
+    if id == 0:
+        post = Post(author=current_user)
+    else:
+        post = Post.query.get_or_404(id)
 
+    if form.validate_on_submit():
+        post.body = form.body.data
+        post.title = form.title.data
+        # print "post.title=%s \n post.body=%s" % (post.title,post.body)
 
-@main.template_test('current_link')
-def is_current_link(link):
-    return link == request.path
+        db.session.add(post)
+        db.session.commit()
 
-@main.template_filter('md')
-def markdown_to_html(txt):
-    from markdown import markdown
-    return markdown(txt)
+        return redirect(url_for('.post', id=post.id))
 
+    form.title.data = post.title
+    form.body.data = post.body
 
-def read_md(filename):
-    with open(filename) as md_file:
-        content = reduce(lambda x,y:x+y, md_file.readlines())
-    return content.decode('utf-8')
+    title = u'添加新文章'
+    if id > 0:
+        # title = _(u'编辑 - %(title)', title=post.title)
+        title = u'编辑 - %' % post.title
 
-@main.context_processor
-def inject_methods():
-    return dict(read_md=read_md)
-'''
+    if post.title == None and   post.body == None:
+        return render_template('posts/edit.html',
+                           title=title,
+                           form=form)
+
+    return render_template('posts/edit.html',
+                           title=title,
+                           form=form,
+                           post=post)
+
+@main.route('/shoutdown')
+def shutdown():
+    if not current_app.testing:
+        abort(404)
+
+    shoutdown = request.environ.get('werkzeug.server.shutdown')
+    if not shoutdown:
+        abort(500)
+
+    shoutdown()
+    return u'正在关闭服务端进程...'

@@ -1,19 +1,23 @@
 {% extends 'base.html' %}
-{% import '_marcos.html' as ui %}
+{% from "bootstrap/pagination.html" import render_pagination %}
 
-{% block title %}{{title}}{% endblock %}
+{% block page_body %}
+    <div class="container">
+        <a href="{{ url_for('main.edit') }}" class="btn btn-primary">发表新文章</a>
+    </div>
+    <div class="container">
+        {% for post in posts %}
+            <h2><a href="{{ url_for('main.post', id = post.id) }}">{{ post.title }}</a></h2>
+            <div>
+                {{ post.body_html|safe }}
+            </div>
+        {% endfor %}
 
-{% block content %}
+        {% if pagination %}
+            {{ render_pagination(pagination) }}
+        {% endif %}
 
-    <h1>{{self.title()}}</h1>
-
-    {{ ui.input('username') }}
-    {{ ui.input('password',type='password') }}
-
-
-{% endblock content %}
-
-{% block footer %}
-    <hr>
-    {{super()}}
+    </div>
 {% endblock %}
+
+
